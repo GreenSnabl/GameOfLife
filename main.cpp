@@ -22,15 +22,13 @@ int main(int argc, char** argv) {
 
     if (argc == 1) {
         loesung();
-    } else if (argc == 4 || argc == 5) {
-        int height, width, scaling = 1;
-        height = stoi(argv[1]);
-        width = stoi(argv[2]);
-        if (argc == 5) scaling = stoi(argv[4]);
-        GameOfLife game(height, width, argv[3], scaling);
-        game.simulateCurses();
     } else {
-        cout << "\nUngültige Parameter\n";
+        int height, width, mode = 0, scaling = 1;
+        height = stoi(argv[2]);
+        width = stoi(argv[3]);
+        GameOfLife game(argv[1], height, width, scaling);
+        if (argv[4] != nullptr) game.set_mode(stoi(argv[4]));
+        game.simulateCurses();
     }
 
   

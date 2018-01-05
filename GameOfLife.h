@@ -16,33 +16,44 @@
 
 #include <string>
 
-
-class GameOfLife{
+class GameOfLife {
 public:
     GameOfLife();
- //   GameOfLife(int width, int height);
-    GameOfLife(int height, int width, const std::string &fname, int img_scaling);
-    GameOfLife(int width, int height, int** arr);
+    GameOfLife(const std::string &fname, int height, int width, int img_scaling);
+    GameOfLife(int** arr, int width, int height);
     ~GameOfLife();
-    
+
     void simulateCurses();
     void simulateConsole();
-    
+
+    void set_mode(int index);
+
+
 private:
-    
+
     void newGeneration();
     void showWorldConsole();
     void showWorldNCurses();
     bool checkNeighbors(int col, int row, bool populated);
-    
-    int** m_data;
-    int** m_data_new;
+
+
+    bool torus;
+    bool edges;
+
     int m_width;
     int m_height;
+    int** m_data;
+    int** m_data_new;
 };
 
 
+int low_border(int index);
+int high_border(int index, int max);
+int torus_border(int index, int max);
 void loesung();
+
+
+
 
 #endif /* GAMEOFLIFE_H */
 

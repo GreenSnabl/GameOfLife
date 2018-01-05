@@ -12,7 +12,6 @@
  */
 
 #include "GameOfLife.h"
-#include <random>
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
@@ -25,7 +24,7 @@ using std::setw;
 
 
 
-GameOfLife::GameOfLife(int width, int height, int** arr) : m_width{width}, m_height{height}
+GameOfLife::GameOfLife(int** arr, int width, int height) : m_width{width}, m_height{height}, edges{false}, torus{false}
 {
     m_data = new int*[m_height];
     m_data_new = new int*[m_height];
@@ -38,7 +37,7 @@ GameOfLife::GameOfLife(int width, int height, int** arr) : m_width{width}, m_hei
             m_data[i][j] = m_data_new[i][j] = arr[i][j];
 }
 
-GameOfLife::GameOfLife(int height, int width, const std::string& fname, int img_scaling) : m_width{width}, m_height{height}
+GameOfLife::GameOfLife(const std::string& fname, int height, int width, int img_scaling) : m_width{width}, m_height{height}, edges{false}, torus{false}
 {
     GreyImage img(m_width, m_height);
     img.load(fname);
@@ -64,46 +63,50 @@ GameOfLife::~GameOfLife() {
     delete[] m_data_new;
 }
 
-bool GameOfLife::checkNeighbors(int col, int row, bool populated) {
+bool GameOfLife::checkNeighbors(int height, int width, bool populated) {
     int cnt = 0;
     if (populated) --cnt;
-    for (int i = col - 1; i <= col + 1; ++i) {
-        for (int j = row - 1; j <= row + 1; ++j)
-            if (m_data[i][j] == 1) ++cnt;
+
+    if (torus) {
+        for (int i = height - 1; i <= height + 1; ++i)
+            for (int j = width - 1; j <= width + 1; ++j)
+                if (m_data[torus_border(i, m_height)][torus_border(j, m_width)] == 1) ++cnt;
+    } else {
+        for (int i = low_border(height); i <= high_border(height, m_height - 1); ++i) {
+            for (int j = low_border(width); j <= high_border(width, m_width - 1); ++j)
+                if (m_data[i][j] == 1) ++cnt;
+        }
     }
+    /*for (int i = low_border(height); i <= high_border(height, m_height); ++i) {
+        for (int j = low_border(width); j <= high_border(width, m_width); ++j)
+            if (m_data[i][j] == 1) ++cnt;
+    }*/
+
     if (populated && (cnt == 2 || cnt == 3)) return true;
     if (!populated && cnt == 3) return true;
     return false;
 }
 
 void GameOfLife::newGeneration() {
-    // In this version fields on edges will not be checked
 
-    for (int i = 1; i < m_height - 1; ++i) // since there are only 5 neighbors instead of 8
-        for (int j = 1; j < m_width - 1; ++j) {
-            if (checkNeighbors(i, j, (m_data[i][j] == 1))) m_data_new[i][j] = 1;
-            else m_data_new[i][j] = 0;
-        }
+
+    if (!edges) {
+        for (int i = 1; i < m_height - 1; ++i)
+            for (int j = 1; j < m_width - 1; ++j) {
+                if (checkNeighbors(i, j, (m_data[i][j] == 1))) m_data_new[i][j] = 1;
+                else m_data_new[i][j] = 0;
+            }
+    } else {
+        for (int i = 0; i < m_height; ++i)
+            for (int j = 0; j < m_width; ++j)
+                if (checkNeighbors(i, j, (m_data[i][j] == 1))) m_data_new[i][j] = 1;
+                else m_data_new[i][j] = 0;
+    }
     for (int i = 0; i < m_height; ++i)
         for (int j = 0; j < m_width; ++j)
             m_data[i][j] = m_data_new[i][j];
 }
 
-/*
-
-void GameOfLife::newGeneration() {
-    int new_world[m_height][m_width] = {0};                 // In this version fields on edges will not be checked
-    
-    for (int i = 1; i < m_height - 1; ++i)                  // since there are only 5 neighbors instead of 8
-        for (int j = 1; j < m_width - 1; ++j) {
-            if (checkNeighbors(i, j, (m_data[i][j] == 1)))
-                new_world[i][j] = 1;
-        }
-    for (int i = 0; i < m_height; ++i)
-        for (int j = 0; j < m_width; ++j)
-            m_data[i][j] = new_world[i][j];
-}
- */
 void GameOfLife::showWorldConsole() {
     for (int i = 0; i < m_height; ++i) {
         for (int j = 0; j < m_width; ++j) {
@@ -128,7 +131,7 @@ void GameOfLife::simulateConsole() {
 }
 
 void GameOfLife::showWorldNCurses() {
-    
+
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
     for (int i = 0; i < m_height; ++i)
@@ -150,7 +153,7 @@ void GameOfLife::showWorldNCurses() {
 }
 
 void GameOfLife::simulateCurses() {
-    
+
     int key = 0;
     const int ENTER = 10;
     initscr();
@@ -170,6 +173,30 @@ void GameOfLife::simulateCurses() {
 
     endwin();
 }
+
+void GameOfLife::set_mode(int index) {
+    switch (index) {
+        case 0:{ edges = false; torus = false; break;}
+        case 1: {edges = true; torus = false; break; }
+        case 2: {edges = true; torus = true; break;}
+    }
+}
+
+int low_border(int index) {
+    if (index == 0) return 0;
+    return index - 1;
+}
+
+int high_border(int index, int max) {
+    if (index == max) return max;
+    return index + 1;
+};
+
+int torus_border(int index, int max) {
+    if (index == -1) return max - 1;
+    else if (index == max) return 0;
+    return index;
+};
 
 void loesung() {
     int arr[32][32] = {
@@ -215,11 +242,11 @@ void loesung() {
         for (int j = 0; j < 32; ++j)
             arr2[i][j] = arr[i][j];
 
-    GameOfLife g(32, 32, arr2);
+    GameOfLife g(arr2, 32, 32);
 
     g.simulateCurses();
 
-    GameOfLife g2(32, 32, arr2);
+    GameOfLife g2(arr2, 32, 32);
     g2.simulateConsole();
 
     for (int i = 0; i < 32; ++i)
@@ -228,26 +255,3 @@ void loesung() {
 
 }
 
-
-
-
-
-
-
-
-
-
-/*GameOfLife::GameOfLife() : m_width{10}, m_height{10}
-{
-    m_data = new int*[m_height];
-    for (int i = 0; i < m_height; ++i)
-        m_data[i] = new int[m_width];
-} */
-
-/*GameOfLife::GameOfLife(int width, int height) : m_width{width}, m_height{height}
-{
-    m_data = new int*[m_height];
-    for (int i = 0; i < m_height; ++i)
-        m_data[i] = new int[m_width];        
-        
-}*/
