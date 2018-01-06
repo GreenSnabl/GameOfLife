@@ -22,20 +22,17 @@ public:
     GameOfLife(const std::string &fname, int height, int width, int img_scaling);
     GameOfLife(int** arr, int width, int height);
     ~GameOfLife();
-
-    void simulateCurses();
-    void simulateConsole();
-
+   
     void set_mode(int index);
-
-
-private:
-
     void newGeneration();
-    void showWorldConsole();
-    void showWorldNCurses();
+        
+    const int get_height() const;
+    const int get_width() const;
+    const bool is_alive(int height, int width) const;
+    
+private:
+    
     bool checkNeighbors(int col, int row, bool populated);
-
 
     bool torus;
     bool edges;
@@ -47,12 +44,14 @@ private:
 };
 
 
+
 int low_border(int index);
 int high_border(int index, int max);
 int torus_border(int index, int max);
+
 void loesung();
-
-
+void simulate(GameOfLife& game);
+void print(const GameOfLife& game);
 
 
 #endif /* GAMEOFLIFE_H */

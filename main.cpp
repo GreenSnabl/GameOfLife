@@ -10,31 +10,30 @@
  *
  * Created on January 3, 2018, 8:57 PM
  */
-
-#include "GameOfLife.h"
-#include "Bitmap.h"
+#include "GameCurses.h"
 #include <iostream>
 #include <iomanip>
 
 using namespace std;
 
 int main(int argc, char** argv) {
+    
+        if (argc == 1) {
+            loesung();
+        } else {
+            int height, width, mode = 0, scaling = 1;
+            height = stoi(argv[2]);
+            width = stoi(argv[3]);
+            GameCurses game(argv[1], height, width, scaling);
+            if (argv[4] != nullptr) game.set_mode(stoi(argv[4]));
+            game.play();
+        }
 
-    if (argc == 1) {
-        loesung();
-    } else {
-        int height, width, mode = 0, scaling = 1;
-        height = stoi(argv[2]);
-        width = stoi(argv[3]);
-        GameOfLife game(argv[1], height, width, scaling);
-        if (argv[4] != nullptr) game.set_mode(stoi(argv[4]));
-        game.simulateCurses();
-    }
-
-  
-     //GameOfLife game01(32, 32, "GameOfLife00000.bmp", 20);
-     //game01.simulateConsole(); 
-     
+/*
+    loesung();
+    GameCurses game01("GameOfLife00000.bmp", 32, 32, 20);
+    game01.play();
+*/
     return 0;
 
 }

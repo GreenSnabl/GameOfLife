@@ -12,11 +12,11 @@
  */
 
 #include "GameOfLife.h"
+#include "GameCurses.h"
 #include <iostream>
 #include <iomanip>
-#include <unistd.h>
-#include <curses.h>
 #include "Bitmap.h"
+#include <unistd.h>
 
 using std::cout;
 using std::left;
@@ -70,18 +70,19 @@ bool GameOfLife::checkNeighbors(int height, int width, bool populated) {
     if (torus) {
         for (int i = height - 1; i <= height + 1; ++i)
             for (int j = width - 1; j <= width + 1; ++j)
-                if (m_data[torus_border(i, m_height)][torus_border(j, m_width)] == 1) ++cnt;
-    } else {
+                if (is_alive(torus_border(i, m_height), torus_border(j, m_width))) ++cnt;
+
+    } else if (edges) {
         for (int i = low_border(height); i <= high_border(height, m_height - 1); ++i) {
             for (int j = low_border(width); j <= high_border(width, m_width - 1); ++j)
-                if (m_data[i][j] == 1) ++cnt;
+                if (is_alive(i, j)) ++cnt;
+        }
+    } else {
+        for (int i = height - 1; i <= height + 1; ++i) {
+            for (int j = width - 1; j <= width + 1; ++j)
+                if (is_alive(i, j)) ++cnt;
         }
     }
-    /*for (int i = low_border(height); i <= high_border(height, m_height); ++i) {
-        for (int j = low_border(width); j <= high_border(width, m_width); ++j)
-            if (m_data[i][j] == 1) ++cnt;
-    }*/
-
     if (populated && (cnt == 2 || cnt == 3)) return true;
     if (!populated && cnt == 3) return true;
     return false;
@@ -107,79 +108,39 @@ void GameOfLife::newGeneration() {
             m_data[i][j] = m_data_new[i][j];
 }
 
-void GameOfLife::showWorldConsole() {
-    for (int i = 0; i < m_height; ++i) {
-        for (int j = 0; j < m_width; ++j) {
-            if (m_data[i][j] == 1) cout << setw(2) << left << "o";
-            else cout << setw(2) << left << ".";
-        }
-        cout << "\n";
-    }
-    cout << "\n";
-}
-
-void GameOfLife::simulateConsole() {
-
-    showWorldConsole();
-    int i = 0;
-    while (i < 140) {
-        usleep(150000);
-        newGeneration();
-        showWorldConsole();
-        ++i;
-    }
-}
-
-void GameOfLife::showWorldNCurses() {
-
-    init_pair(1, COLOR_BLACK, COLOR_WHITE);
-    init_pair(2, COLOR_WHITE, COLOR_BLACK);
-    for (int i = 0; i < m_height; ++i)
-        for (int j = 0; j < m_width; ++j) {
-            if (m_data[i][j] == 0) {
-                attron(COLOR_PAIR(1));
-                mvaddch(i + 2, j + 2, ' ');
-                attron(COLOR_PAIR(1));
-            } else {
-                attron(COLOR_PAIR(2));
-                mvaddch(i + 2, j + 2, ' ');
-                attroff(COLOR_PAIR(2));
-            }
-        }
-    attron(COLOR_PAIR(2));
-    mvaddstr(m_height + 2, 2, "Press ENTER to quit");
-    attroff(COLOR_PAIR(2));
-
-}
-
-void GameOfLife::simulateCurses() {
-
-    int key = 0;
-    const int ENTER = 10;
-    initscr();
-    keypad(stdscr, TRUE);
-    cbreak();
-    start_color();
-    showWorldNCurses();
-
-    while (key != ENTER) {
-        usleep(150000);
-        newGeneration();
-        showWorldNCurses();
-        refresh();
-        timeout(0);
-        key = getch();
-    }
-
-    endwin();
-}
-
 void GameOfLife::set_mode(int index) {
     switch (index) {
-        case 0:{ edges = false; torus = false; break;}
-        case 1: {edges = true; torus = false; break; }
-        case 2: {edges = true; torus = true; break;}
+        case 1:
+        {
+            edges = false;
+            torus = false;
+            break;
+        }
+        case 2:
+        {
+            edges = true;
+            torus = false;
+            break;
+        }
+        case 3:
+        {
+            edges = true;
+            torus = true;
+            break;
+        }
     }
+}
+
+const int GameOfLife::get_height() const {
+    return m_height;
+}
+
+const int GameOfLife::get_width() const {
+    return m_width;
+}
+
+const bool GameOfLife::is_alive(int height, int width) const {
+    if (height >= 0 && height < m_height && width >= 0 && width < m_width) return (m_data[height][width] == 1);
 }
 
 int low_border(int index) {
@@ -197,6 +158,31 @@ int torus_border(int index, int max) {
     else if (index == max) return 0;
     return index;
 };
+
+
+
+void print(const GameOfLife& game) {
+    for (int i = 0; i < game.get_height(); ++i) {
+        for (int j = 0; j < game.get_width(); ++j) {
+            if (game.is_alive(i, j)) cout << setw(2) << left << "o";
+            else cout << setw(2) << left << ".";
+        }
+        cout << "\n";
+    }
+    cout << "\n";
+}
+
+void simulate(GameOfLife& game) {
+
+    print(game);
+    int i = 0;
+    while (i++ < 140) {
+        print(game);
+        usleep(150000);
+        game.newGeneration();
+    }
+}
+
 
 void loesung() {
     int arr[32][32] = {
@@ -242,16 +228,11 @@ void loesung() {
         for (int j = 0; j < 32; ++j)
             arr2[i][j] = arr[i][j];
 
-    GameOfLife g(arr2, 32, 32);
-
-    g.simulateCurses();
-
-    GameOfLife g2(arr2, 32, 32);
-    g2.simulateConsole();
-
+    GameOfLife game(arr2, 32, 32);
+    GameCurses gameCurses(arr2, 32, 32);
+    simulate(game);
+    gameCurses.play();
     for (int i = 0; i < 32; ++i)
         delete[] arr2[i];
     delete[] arr2;
-
 }
-
