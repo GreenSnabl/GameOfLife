@@ -22,8 +22,8 @@ GameCurses::~GameCurses() {}
 
 void GameCurses::printFrame() {
     
-    std::string selected_mode = "Mode: \t" + get_mode();
-    std::string selected_speed = "Speed:\t" + std::to_string(speed/ 1000) + "ms per frame";
+    std::string selected_mode = "Mode: \t\t" + get_mode();
+    std::string selected_speed = "Speed:\t\t" + std::to_string(speed/ 1000) + "ms per frame";
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
     for (int i = 0; i < game.get_height(); ++i)
@@ -39,7 +39,7 @@ void GameCurses::printFrame() {
             }
         }
     attron(COLOR_PAIR(2));
-    mvaddstr(game.get_height() / 2 - 4, game.get_width() +  2, "\"ENTER\"\tquit");
+    mvaddstr(game.get_height() / 2 - 4, game.get_width() +  2, "\"ENTER\"\t\tquit");
     mvaddstr(game.get_height() / 2 - 3, game.get_width() +  2, "\"UP\" or \"+\" \tspeed up");
     mvaddstr(game.get_height() / 2 - 2, game.get_width() +  2, "\"DOWN\" or \"-\"\tspeed down");
     mvaddstr(game.get_height() / 2 - 1, game.get_width() +  2, "\"1\",\"2\",\"3\"\tmode select");
