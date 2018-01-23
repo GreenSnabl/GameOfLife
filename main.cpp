@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
             int height, width, mode = 0, scaling = 1;
             height = stoi(argv[2]);
             width = stoi(argv[3]);
+            if (argc == 5) scaling = stoi(argv[4]);
             GameCurses game(argv[1], height, width, scaling);
-            if (argv[4] != nullptr) game.set_mode(stoi(argv[4]));
             game.play();
         }
 
