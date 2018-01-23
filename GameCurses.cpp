@@ -108,7 +108,7 @@ void GameCurses::speed_up() {
     if (speed > 10000) speed -= 10000;
 }
 void GameCurses::speed_down(){
-    if (speed < 500000) speed += 20000;
+    if (speed < 500000) speed += 10000;
 }
 
 const std::string GameCurses::get_mode() const
