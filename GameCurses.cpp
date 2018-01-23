@@ -31,7 +31,7 @@ void GameCurses::printFrame() {
             if (game.is_alive(i,j)) {
                 attron(COLOR_PAIR(2));
                 mvaddch(i + 2, j + 2, ' ');
-                attron(COLOR_PAIR(2));
+                attroff(COLOR_PAIR(2));
             } else {
                 attron(COLOR_PAIR(1));
                 mvaddch(i + 2, j + 2, ' ');
@@ -94,13 +94,13 @@ void GameCurses::set_mode(int index) {
 
 void GameCurses::cycle_mode_up()
 {
-    if (mode = 3) mode = 1;
+    if (mode == 3) mode = 1;
     else ++mode;
 
 }
 void GameCurses::cycle_mode_down()
 {
-    if (mode = 1) mode = 3;
+    if (mode == 1) mode = 3;
     else --mode;
 }
 
