@@ -24,7 +24,7 @@ using std::setw;
 
 
 
-GameOfLife::GameOfLife(int** arr, int width, int height) : m_width{width}, m_height{height}, edges{false}, torus{false}
+GameOfLife::GameOfLife(int** arr, int width, int height) : m_width{width}, m_height{height}, edges{false}, torus{false}, generation_count{0}
 {
     m_data = new int*[m_height];
     m_data_new = new int*[m_height];
@@ -37,7 +37,7 @@ GameOfLife::GameOfLife(int** arr, int width, int height) : m_width{width}, m_hei
             m_data[i][j] = m_data_new[i][j] = arr[i][j];
 }
 
-GameOfLife::GameOfLife(const std::string& fname, int height, int width, int img_scaling) : m_width{width}, m_height{height}, edges{false}, torus{false}
+GameOfLife::GameOfLife(const std::string& fname, int height, int width, int img_scaling) : m_width{width}, m_height{height}, edges{false}, torus{false}, generation_count{0}
 {
     GreyImage img(m_width, m_height);
     img.load(fname);
@@ -106,6 +106,7 @@ void GameOfLife::newGeneration() {
     for (int i = 0; i < m_height; ++i)
         for (int j = 0; j < m_width; ++j)
             m_data[i][j] = m_data_new[i][j];
+    ++generation_count;
 }
 
 void GameOfLife::set_mode(int index) {
@@ -143,6 +144,12 @@ const bool GameOfLife::is_alive(int height, int width) const {
     if (height >= 0 && height < m_height && width >= 0 && width < m_width) return (m_data[height][width] == 1);
 }
 
+const int GameOfLife::get_generation_count() const
+{
+    return generation_count;
+}
+
+
 int low_border(int index) {
     if (index == 0) return 0;
     return index - 1;
@@ -154,9 +161,11 @@ int high_border(int index, int max) {
 };
 
 int torus_border(int index, int max) {
-    if (index == -1) return max - 1;
-    else if (index == max) return 0;
-    return index;
+    //if (index == -1) return max - 1;
+    //else if (index == max) return 0;
+    //return index;
+    
+    return (index + max) % max;
 };
 
 

@@ -15,6 +15,8 @@
 #define GAMECURSES_H
 #include "GameOfLife.h"
 
+
+
 class GameCurses{
 public:
     GameCurses();
@@ -26,7 +28,7 @@ public:
     void set_mode(int index);
 
 private:
-    
+    void control(int key);
     void printFrame();
     void cycle_mode_up();
     void cycle_mode_down();

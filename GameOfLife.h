@@ -25,7 +25,8 @@ public:
    
     void set_mode(int index);
     void newGeneration();
-        
+    const int get_generation_count() const;
+    
     const int get_height() const;
     const int get_width() const;
     const bool is_alive(int height, int width) const;
@@ -36,7 +37,8 @@ private:
 
     bool torus;
     bool edges;
-
+    
+    int generation_count = 0;
     int m_width;
     int m_height;
     int** m_data;
